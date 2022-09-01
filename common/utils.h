@@ -4,13 +4,14 @@
 #include <string>
 
 #define GET_ELEMENT(x, a, b, c, d, sb, sc, sd)      \
-  *(x + d + c * sd + b * sc * sd + a * sb * sc * sd)
+  *(x + d + sd * (c + sc * (b + sb * a)))
 
 namespace convperf {
 
 struct Shape4D {
   int N, H, W, C;
   int getLinearizedShape() const;
+  std::string str() const;
 };
 
 struct Shape2D {
@@ -32,6 +33,7 @@ struct ParamFileReader {
   std::vector<ConvParams> readParams(const std::string &filename);
 };
 
-void init_random_tensor4d(float *tensor, const Shape4D shape);
+void init_random_tensor4d(float *tensor, Shape4D shape);
+void write_tensor4d_to_file(const float *tensor, Shape4D shape, std::string filename);
 
 }

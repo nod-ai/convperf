@@ -2,11 +2,18 @@
 #include <sstream>
 #include <fstream>
 #include <stdlib.h>
+#include <iostream>
 
 namespace convperf {
 
 int Shape4D::getLinearizedShape() const {
   return N * H * W * C;
+}
+
+std::string Shape4D::str() const {
+  std::stringstream ss;
+  ss << N << 'x' << C << 'x' << H << 'x' << W;
+  return ss.str();
 }
 
 void ConvParams::computeOutputShape() {
@@ -30,11 +37,16 @@ std::vector<ConvParams> ParamFileReader::readParams(const std::string &filename)
   while (!sizesFile.eof()) {
     std::string line;
     std::getline(sizesFile, line);
+    if (line.empty()) break;
+    if (line[0] == '#') continue;
     std::replace(line.begin(), line.end(), ',', ' ');
     std::stringstream linestream(line);
     std::string inputShape, filterShape, outputShape;
-    linestream >> inputShape >> filterShape >> outputShape;
     ConvParams param;
+    linestream >> inputShape >> filterShape >> outputShape
+               >> param.strides.H >> param.strides.W
+               >> param.padding.H >> param.padding.W
+               >> param.dilations.H >> param.dilations.W;
     std::replace(inputShape.begin(), inputShape.end(), 'x', ' ');
     std::stringstream is(inputShape);
     is >> param.inputShape.N >> param.inputShape.C >>
@@ -63,6 +75,25 @@ void init_random_tensor4d(float *tensor, Shape4D shape) {
       }
     }
   }
+}
+
+void write_tensor4d_to_file(const float *tensor, Shape4D shape, std::string filename) {
+  std::ofstream outputFile(filename, std::ios::out);
+  std::stringstream ss;
+  outputFile << shape.N << "," << shape.C << "," << shape.H << ","
+             << shape.W << "\n";
+  for (int i = 0; i < shape.N; i++) {
+    for (int j = 0; j < shape.C; j++) {
+      for (int k = 0; k < shape.H; k++) {
+        for (int l = 0; l < shape.W; l++) {
+          ss << GET_ELEMENT(tensor, i, j, k, l, shape.C, shape.H, shape.W) << ",";
+        }
+      }
+    }
+  }
+  std::string out = ss.str();
+  out.pop_back();
+  outputFile << out;
 }
 
 }
