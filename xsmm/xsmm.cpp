@@ -1,4 +1,5 @@
 #include "xsmm/xsmm.h"
+#include "dnn_common.h"
 #if defined(_OPENMP)
 # include <omp.h>
 #endif
@@ -32,42 +33,27 @@ XSMMRunner::XSMMRunner(const ConvParams &params) : params(params) {
     params.padding.W, params.padding.H, params.padding.W, bc, bk, nThreads,
     my_fuse, overwrite_output, avoid_bwd_wt_trans, zero_output_rims_fwd);
 
-  Shape4D paddedInputShape = params.computePaddedShape(params.inputShape);
-  Shape4D paddedOutputShape = params.computePaddedShape(params.outputShape);
-
-  input_save = (float*)libxsmm_aligned_malloc((size_t) paddedInputShape.getLinearizedShape() *sizeof(float), 2097152);
-  output_save = (float*)libxsmm_aligned_malloc((size_t) paddedOutputShape.getLinearizedShape() *sizeof(float), 2097152);
+  input_save = (float*)libxsmm_aligned_malloc((size_t) params.inputShape.getLinearizedShape() *sizeof(float), 2097152);
+  output_save = (float*)libxsmm_aligned_malloc((size_t) params.outputShape.getLinearizedShape() *sizeof(float), 2097152);
   filter_save = (float*)libxsmm_aligned_malloc((size_t) params.filterShape.getLinearizedShape() *sizeof(float), 2097152);
-  input_libxsmm = (float*)libxsmm_aligned_malloc((size_t) paddedInputShape.getLinearizedShape() *sizeof(float), 2097152);
-  output_libxsmm = (float*)libxsmm_aligned_malloc((size_t) paddedOutputShape.getLinearizedShape() *sizeof(float), 2097152);
-  output_libxsmm = (float*)libxsmm_aligned_malloc((size_t) params.filterShape.getLinearizedShape() *sizeof(float), 2097152);
-
+  input_libxsmm = (float*)libxsmm_aligned_malloc((size_t) params.inputShape.getLinearizedShape() *sizeof(float), 2097152);
+  output_libxsmm = (float*)libxsmm_aligned_malloc((size_t) params.outputShape.getLinearizedShape() *sizeof(float), 2097152);
+  filter_libxsmm = (float*)libxsmm_aligned_malloc((size_t) params.filterShape.getLinearizedShape() *sizeof(float), 2097152);
 }
 
 void XSMMRunner::run(const float *input, const float *filter, float *output) {
 
-  #if 0
-  copy_buf(input, input_save, params.inputShape.getLinearizedShape());
+  copy_buf((float *)input, input_save, params.inputShape.getLinearizedShape());
   zero_buf(output_save, params.outputShape.getLinearizedShape());
+  copy_buf(output, output_save, params.outputShape.getLinearizedShape());
 
-  set_zeropad_nchw(naive_output, nImg, nOfm, ofhp, ofwp, pad_h_out, pad_w_out);
-
-  copy_buf(naive_output, naive_output_save, nImg*nOfm*ofhp*ofwp);
-  zero_buf(naive_libxsmm_output, nImg*nOfm*ofhp*ofwp);
-  zero_buf(naive_libxsmm_input,  nImg*nIfm*ifhp*ifwp);
-  init_buf(naive_filter,         nOfm*nIfm*kh*kw, 0, 0);
-  copy_buf(naive_filter, naive_filter_wu, nOfm*nIfm*kh*kw);
-  zero_buf(naive_libxsmm_filter, nOfm*nIfm*kh*kw);
-  naive_copy_NCHW_to_NHWC(naive_input, input_nhwc, nImg, ifhp, ifwp, nIfm);
-  zero_buf(output_nhwc,          nImg*nOfm*ofhp*ofwp);
-  zero_buf(naive_output_nhwc,    nImg*nOfm*ofhp*ofwp);
-  zero_buf(naive_input_nhwc,     nImg*nIfm*ifhp*ifwp);
-  naive_copy_KCRS_to_RSCK(naive_filter, filter_rsck, kh, kw, nIfm, nOfm);
-  init_buf(bias_libxsmm,         nOfm, 0, 0);
+  zero_buf(input_libxsmm, params.inputShape.getLinearizedShape());
+  zero_buf(output_libxsmm,  params.outputShape.getLinearizedShape());
+  zero_buf(filter_libxsmm, params.filterShape.getLinearizedShape());;
 
   /* first touch LIBXSMM */
   zero_buf(input_libxsmm, params.inputShape.getLinearizedShape());
-  zero_buf(filter_libxsmm, params.filterShape.getLinearizedShape())
+  zero_buf(filter_libxsmm, params.filterShape.getLinearizedShape());
   zero_buf(output_libxsmm, params.outputShape.getLinearizedShape());
 
   /* Copy input/output/weight tensors to correct format */
@@ -83,7 +69,7 @@ void XSMMRunner::run(const float *input, const float *filter, float *output) {
                             params.outputShape.H,
                             params.outputShape.W,
                             cfg.ofmblock);
-  tensor_copy_KCRS_to_KCRSck(filter, filter_libxsmm,
+  tensor_copy_KCRS_to_KCRSck((float *)filter, filter_libxsmm,
                              params.filterShape.N,
                              params.filterShape.C,
                              params.filterShape.H,
@@ -102,7 +88,7 @@ void XSMMRunner::run(const float *input, const float *filter, float *output) {
     const int tid = 0;
 #endif
     libxsmm_dnn_conv_fwd_exec(cfg, filter_libxsmm, input_libxsmm, output_libxsmm,
-                              bias_libxsmm, nullptr, 0, tid, scratch);
+                              nullptr, nullptr, 0, tid, nullptr);
   }
 
   /* copy out data */
@@ -112,7 +98,6 @@ void XSMMRunner::run(const float *input, const float *filter, float *output) {
                             params.outputShape.H,
                             params.outputShape.W,
                             cfg.ofmblock);
-  #endif
 
 }
 

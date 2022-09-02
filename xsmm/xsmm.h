@@ -3,7 +3,6 @@
 #include "common/runner.h"
 #include "common/utils.h"
 #include "libxsmm_dnn.h"
-#include "dnn_common.h"
 
 namespace convperf {
 
@@ -18,6 +17,7 @@ private:
   float *input_save, *output_save, *filter_save;
   float *input_libxsmm, *output_libxsmm, *filter_libxsmm;
   const ConvParams &params;
+  Shape4D paddedInputShape, paddedOutputShape;
 };
 
 }

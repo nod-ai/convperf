@@ -96,4 +96,23 @@ void write_tensor4d_to_file(const float *tensor, Shape4D shape, std::string file
   outputFile << out;
 }
 
+float checkTensorsForEquality(float *a, float *b, Shape4D shape) {
+  float maxError{0};
+  for (int i = 0; i < shape.N; i++) {
+    for (int j = 0; j < shape.C; j++) {
+      for (int k = 0; k < shape.H; k++) {
+        for (int l = 0; l < shape.W; l++) {
+          float x = GET_ELEMENT(a, i, j, k, l, shape.C, shape.H, shape.W);
+          float y = GET_ELEMENT(b, i, j, k, l, shape.C, shape.H, shape.W);
+          float error = std::abs(x - y);
+          if (error > maxError) {
+            maxError = error;
+          }
+        }
+      }
+    }
+  }
+  return maxError;
+}
+
 }

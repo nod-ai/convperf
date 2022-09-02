@@ -35,5 +35,6 @@ struct ParamFileReader {
 
 void init_random_tensor4d(float *tensor, Shape4D shape);
 void write_tensor4d_to_file(const float *tensor, Shape4D shape, std::string filename);
+float checkTensorsForEquality(float *a, float *b, Shape4D shape);
 
 }
