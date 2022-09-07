@@ -1,4 +1,5 @@
 #include "iree/iree.h"
+#include "iree/base/internal/flags.h"
 #include "naive/naive.h"
 #include "xsmm/xsmm.h"
 #include "common/utils.h"
@@ -38,6 +39,9 @@ static void BenchmarkFunction(benchmark::State &state, const convperf::ConvParam
 }
 
 int main(int argc, char *argv[]) {
+  iree_flags_parse_checked(IREE_FLAGS_PARSE_MODE_UNDEFINED_OK |
+                           IREE_FLAGS_PARSE_MODE_CONTINUE_AFTER_HELP,
+                           &argc, &argv);
   convperf::ParamFileReader reader;
   auto params = reader.readParams("benchmark_sizes/resnet50.txt");
   for (const auto &param : params) {
