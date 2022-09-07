@@ -1,3 +1,4 @@
+#include "iree/iree.h"
 #include "naive/naive.h"
 #include "xsmm/xsmm.h"
 #include "common/utils.h"
@@ -8,20 +9,24 @@ static void BenchmarkFunction(benchmark::State &state, const convperf::ConvParam
   size_t alignment{16};
   bool verify{true};
   float *input, *filter, *output;
-  float tol{1e-4};
+  float tol{5e-4};
   input = static_cast<float *>(std::aligned_alloc(alignment, param.inputShape.getLinearizedShape() * sizeof(float)));
   filter = static_cast<float *>(std::aligned_alloc(alignment, param.filterShape.getLinearizedShape() * sizeof(float)));
   output = static_cast<float *>(std::aligned_alloc(alignment, param.outputShape.getLinearizedShape() * sizeof(float)));
   init_random_tensor4d(input, param.inputShape);
   init_random_tensor4d(filter, param.filterShape);
-  auto runner = convperf::XSMMRunner(param);
+  auto runner = convperf::IREERunner(param);
+  runner.setup(input, filter, output);
   for (auto _ : state) {
     runner.run(input, filter, output);
   }
   if (verify) {
+    runner.getResults(output);
     auto verifier = convperf::NaiveRunner(param);
     float *golden = static_cast<float *>(std::aligned_alloc(alignment, param.outputShape.getLinearizedShape() * sizeof(float)));
+    verifier.setup(input, filter, golden);
     verifier.run(input, filter, golden);
+    verifier.getResults(golden);
     float error = convperf::checkTensorsForEquality(golden, output, param.outputShape);
     if (error > tol) {
       printf("Accuracy verification failed [%f] > [%f]\n", error, tol);

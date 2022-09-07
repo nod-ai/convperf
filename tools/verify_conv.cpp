@@ -19,7 +19,9 @@ int main(int argc, char *argv[]) {
     init_random_tensor4d(filter, param.filterShape);
     write_tensor4d_to_file(input, param.inputShape, "input.csv");
     write_tensor4d_to_file(filter, param.filterShape, "filter.csv");
+    runner.setup(input, filter, output);
     runner.run(input, filter, output);
+    runner.getResults(output);
     write_tensor4d_to_file(output, param.outputShape, "output.csv");
     free(input);
     free(filter);

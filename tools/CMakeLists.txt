@@ -2,6 +2,7 @@ project(tools)
 
 add_executable(benchmark_conv benchmark_conv.cpp)
 target_link_libraries(benchmark_conv PUBLIC
+  iree_runner
   naive_runner
   xsmm_runner
   benchmark

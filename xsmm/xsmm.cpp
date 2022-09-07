@@ -41,15 +41,28 @@ XSMMRunner::XSMMRunner(const ConvParams &params) : params(params) {
   filter_libxsmm = (float*)libxsmm_aligned_malloc((size_t) params.filterShape.getLinearizedShape() *sizeof(float), 2097152);
 }
 
-void XSMMRunner::run(const float *input, const float *filter, float *output) {
 
-  copy_buf((float *)input, input_save, params.inputShape.getLinearizedShape());
+void XSMMRunner::setup(const float *input, const float *filter, float *output) {
+
+  if (params.inputShape.format == "nhwc") {
+    input_nchw = (float*)libxsmm_aligned_malloc((size_t) params.inputShape.getLinearizedShape() *sizeof(float), 2097152);
+    output_nchw = (float*)libxsmm_aligned_malloc((size_t) params.outputShape.getLinearizedShape() *sizeof(float), 2097152);
+    convert_nhwc_to_nchw(input, input_nchw, params.inputShape);
+  } else {
+    input_nchw = (float *) input;
+    output_nchw = output;
+  }
+
+  if (params.filterShape.format == "hwcf") {
+    filter_kcrs = (float*)libxsmm_aligned_malloc((size_t) params.filterShape.getLinearizedShape() *sizeof(float), 2097152);
+    convert_hwcf_to_fchw(filter, filter_kcrs, params.filterShape);
+  } else {
+    filter_kcrs = (float *) filter;
+  }
+
+  copy_buf((float *)input_nchw, input_save, params.inputShape.getLinearizedShape());
   zero_buf(output_save, params.outputShape.getLinearizedShape());
   copy_buf(output, output_save, params.outputShape.getLinearizedShape());
-
-  zero_buf(input_libxsmm, params.inputShape.getLinearizedShape());
-  zero_buf(output_libxsmm,  params.outputShape.getLinearizedShape());
-  zero_buf(filter_libxsmm, params.filterShape.getLinearizedShape());;
 
   /* first touch LIBXSMM */
   zero_buf(input_libxsmm, params.inputShape.getLinearizedShape());
@@ -69,14 +82,16 @@ void XSMMRunner::run(const float *input, const float *filter, float *output) {
                             params.outputShape.H,
                             params.outputShape.W,
                             cfg.ofmblock);
-  tensor_copy_KCRS_to_KCRSck((float *)filter, filter_libxsmm,
+  tensor_copy_KCRS_to_KCRSck((float *)filter_kcrs, filter_libxsmm,
                              params.filterShape.N,
                              params.filterShape.C,
                              params.filterShape.H,
                              params.filterShape.W,
                              cfg.ifmblock,
                              cfg.ofmblock);
+}
 
+void XSMMRunner::run(const float *input, const float *filter, float *output) {
   /* run LIBXSMM convolutions */
 #if defined(_OPENMP)
 #pragma omp parallel
@@ -90,18 +105,32 @@ void XSMMRunner::run(const float *input, const float *filter, float *output) {
     libxsmm_dnn_conv_fwd_exec(cfg, filter_libxsmm, input_libxsmm, output_libxsmm,
                               nullptr, nullptr, 0, tid, nullptr);
   }
+}
+
+void XSMMRunner::getResults(float *output) {
 
   /* copy out data */
-  tensor_copy_NCHWc_to_NCHW(output_libxsmm, output,
+  tensor_copy_NCHWc_to_NCHW(output_libxsmm, output_nchw,
                             params.outputShape.N,
                             params.outputShape.C,
                             params.outputShape.H,
                             params.outputShape.W,
                             cfg.ofmblock);
 
+  if (params.outputShape.format == "nhwc") {
+    convert_nchw_to_nhwc(output_nchw, output, params.outputShape);
+  }
+
 }
 
 XSMMRunner::~XSMMRunner() {
+  if (params.inputShape.format == "nhwc") {
+    libxsmm_free(input_nchw);
+    libxsmm_free(output_nchw);
+  }
+  if (params.filterShape.format == "hwcf") {
+    libxsmm_free(filter_kcrs);
+  }
   libxsmm_free(input_save);
   libxsmm_free(output_save);
   libxsmm_free(filter_save);

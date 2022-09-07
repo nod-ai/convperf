@@ -12,7 +12,13 @@ int Shape4D::getLinearizedShape() const {
 
 std::string Shape4D::str() const {
   std::stringstream ss;
-  ss << N << 'x' << C << 'x' << H << 'x' << W;
+  if ((format == "nchw") || (format == "fchw")) {
+    ss << N << 'x' << C << 'x' << H << 'x' << W;
+  } else if (format == "hwcf") {
+    ss << H << 'x' << W << 'x' << C << 'x' << N;
+  } else {
+    ss << N << 'x' << H << 'x' << W << 'x' << C;
+  }
   return ss.str();
 }
 
@@ -29,7 +35,6 @@ Shape4D ConvParams::computePaddedShape(const Shape4D &shape) const {
   paddedShape.W = shape.W + 2 * padding.W;
   return paddedShape;
 }
-
 
 std::vector<ConvParams> ParamFileReader::readParams(const std::string &filename) {
   std::ifstream sizesFile(filename, std::ios::in);
@@ -51,25 +56,28 @@ std::vector<ConvParams> ParamFileReader::readParams(const std::string &filename)
     std::stringstream is(inputShape);
     is >> param.inputShape.N >> param.inputShape.C >>
           param.inputShape.H >> param.inputShape.W;
+    param.inputShape.format = STR(INPUT_FORMAT);
     std::replace(outputShape.begin(), outputShape.end(), 'x', ' ');
     std::stringstream os(outputShape);
     os >> param.outputShape.N >> param.outputShape.C >>
           param.outputShape.H >> param.outputShape.W;
+    param.outputShape.format = STR(INPUT_FORMAT);
     std::replace(filterShape.begin(), filterShape.end(), 'x', ' ');
     std::stringstream fs(filterShape);
     fs >> param.filterShape.N >> param.filterShape.C >>
           param.filterShape.H >> param.filterShape.W;
+    param.filterShape.format = STR(FILTER_FORMAT);
     params.push_back(param);
   }
   return params;
 }
 
 void init_random_tensor4d(float *tensor, Shape4D shape) {
-  for (int i = 0; i < shape.N; i++) {
-    for (int j = 0; j < shape.C; j++) {
-      for (int k = 0; k < shape.H; k++) {
-        for (int l = 0; l < shape.W; l++) {
-          GET_ELEMENT(tensor, i, j, k, l, shape.C, shape.H, shape.W)
+  for (int i = 0; i < shape[0]; i++) {
+    for (int j = 0; j < shape[1]; j++) {
+      for (int k = 0; k < shape[2]; k++) {
+        for (int l = 0; l < shape[3]; l++) {
+          GET_ELEMENT(tensor, i, j, k, l, shape[1], shape[2], shape[3])
             = ((float) rand() / (float) RAND_MAX);
         }
       }
@@ -80,13 +88,12 @@ void init_random_tensor4d(float *tensor, Shape4D shape) {
 void write_tensor4d_to_file(const float *tensor, Shape4D shape, std::string filename) {
   std::ofstream outputFile(filename, std::ios::out);
   std::stringstream ss;
-  outputFile << shape.N << "," << shape.C << "," << shape.H << ","
-             << shape.W << "\n";
-  for (int i = 0; i < shape.N; i++) {
-    for (int j = 0; j < shape.C; j++) {
-      for (int k = 0; k < shape.H; k++) {
-        for (int l = 0; l < shape.W; l++) {
-          ss << GET_ELEMENT(tensor, i, j, k, l, shape.C, shape.H, shape.W) << ",";
+  outputFile << shape.str() <<"," << shape.format << "\n";
+  for (int i = 0; i < shape[0]; i++) {
+    for (int j = 0; j < shape[1]; j++) {
+      for (int k = 0; k < shape[2]; k++) {
+        for (int l = 0; l < shape[3]; l++) {
+          ss << GET_ELEMENT(tensor, i, j, k, l, shape[1], shape[2], shape[3]) << ",";
         }
       }
     }
@@ -98,12 +105,12 @@ void write_tensor4d_to_file(const float *tensor, Shape4D shape, std::string file
 
 float checkTensorsForEquality(float *a, float *b, Shape4D shape) {
   float maxError{0};
-  for (int i = 0; i < shape.N; i++) {
-    for (int j = 0; j < shape.C; j++) {
-      for (int k = 0; k < shape.H; k++) {
-        for (int l = 0; l < shape.W; l++) {
-          float x = GET_ELEMENT(a, i, j, k, l, shape.C, shape.H, shape.W);
-          float y = GET_ELEMENT(b, i, j, k, l, shape.C, shape.H, shape.W);
+  for (int i = 0; i < shape[0]; i++) {
+    for (int j = 0; j < shape[1]; j++) {
+      for (int k = 0; k < shape[2]; k++) {
+        for (int l = 0; l < shape[3]; l++) {
+          float x = GET_ELEMENT(a, i, j, k, l, shape[1], shape[2], shape[3]);
+          float y = GET_ELEMENT(b, i, j, k, l, shape[1], shape[2], shape[3]);
           float error = std::abs(x - y);
           if (error > maxError) {
             maxError = error;
@@ -114,5 +121,47 @@ float checkTensorsForEquality(float *a, float *b, Shape4D shape) {
   }
   return maxError;
 }
+
+void convert_nhwc_to_nchw(const float *src, float *dst, Shape4D shape) {
+  for(int i = 0; i < shape.N; i++) {
+    for(int j = 0; j < shape.C; j++) {
+      for(int k = 0; k < shape.H; k++) {
+        for(int l = 0; l < shape.W; l++) {
+          GET_ELEMENT(dst, i, j, k, l, shape.C, shape.H, shape.W) =
+          GET_ELEMENT(src, i, k, l, j, shape.H, shape.W, shape.C);
+        }
+      }
+    }
+  }
+}
+
+void convert_nchw_to_nhwc(const float *src, float *dst, Shape4D shape) {
+  for(int i = 0; i < shape.N; i++) {
+    for(int j = 0; j < shape.H; j++) {
+      for(int k = 0; k < shape.W; k++) {
+        for(int l = 0; l < shape.C; l++) {
+          GET_ELEMENT(dst, i, j, k, l, shape.H, shape.W, shape.C) =
+          GET_ELEMENT(src, i, l, j, k, shape.C, shape.H, shape.W);
+        }
+      }
+    }
+  }
+}
+
+void convert_hwcf_to_fchw(const float *src, float *dst, Shape4D shape) {
+  int F = shape.N;
+  for(int i = 0; i < F; i++) {
+    for(int j = 0; j < shape.C; j++) {
+      for(int k = 0; k < shape.H; k++) {
+        for(int l = 0; l < shape.W; l++) {
+          GET_ELEMENT(dst, i, j, k, l, shape.C, shape.H, shape.W) =
+          GET_ELEMENT(src, k, l, j, i, shape.W, shape.C, F);
+        }
+      }
+    }
+  }
+
+}
+
 
 }

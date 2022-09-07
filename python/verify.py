@@ -4,16 +4,27 @@
 import torch
 import numpy as np
 
-input_shape = np.loadtxt('input.csv', delimiter=',', max_rows=1, dtype=np.int32)
-output_shape = np.loadtxt('output.csv', delimiter=',', max_rows=1, dtype=np.int32)
-filter_shape = np.loadtxt('filter.csv', delimiter=',', max_rows=1, dtype=np.int32)
+def get_shape_and_format(file_name):
+    shape, format = open(file_name).readline().rstrip().split(',')
+    shape = [int(x) for x in shape.split('x')]
+    return shape, format
 
-input = np.loadtxt('input.csv', delimiter=',', skiprows=1)
-input = torch.from_numpy(np.reshape(input, input_shape))
-output_c = np.loadtxt('output.csv', delimiter=',', skiprows=1)
-output_c = torch.from_numpy(np.reshape(output_c, output_shape))
-filter = np.loadtxt('filter.csv', delimiter=',', skiprows=1)
-filter = torch.from_numpy(np.reshape(filter, filter_shape))
+def get_tensor(file_name, shape, format):
+    tensor = np.loadtxt(file_name, delimiter=',', skiprows=1)
+    tensor = torch.from_numpy(np.reshape(tensor, shape))
+    if format == "nhwc":
+        tensor = tensor.permute(0, 3, 1, 2)
+    if format == "hwcf":
+        tensor = tensor.permute(3, 2, 0, 1)
+    return tensor
+
+input_shape, input_format = get_shape_and_format('input.csv')
+output_shape, output_format = get_shape_and_format('output.csv')
+filter_shape, filter_format = get_shape_and_format('filter.csv')
+
+input = get_tensor('input.csv', input_shape, input_format)
+output_c = get_tensor('output.csv', output_shape, output_format)
+filter = get_tensor('filter.csv', filter_shape, filter_format)
 
 output = torch.nn.functional.conv2d(input, filter, bias=None, stride=(2, 2),
                                     padding=(0, 0), dilation=(1, 1), groups=1)
