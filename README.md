@@ -7,5 +7,5 @@ cmake --build build
 ```
 # Run Benchmarks
 ```
-./build/tools/benchmark_conv
+python convperf.py --benchmark_tool build/tools/benchmark_conv --runners iree,xsmm
 ```
