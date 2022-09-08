@@ -9,20 +9,22 @@ public:
    * Function for setting up any data structures
    * needed for the computation
    */
-  void setup(const float *a, const float *b, float *c) {}
+  virtual void setup(const float *a, const float *b, float *c) = 0;
 
   /*
    * Function with the computation that will be
    * profiled
    */
-  void run(const float *a, const float *b, float *c) {}
+  virtual void run(const float *a, const float *b, float *c) = 0;
 
   /*
    * Function to store results
    * from computation to output buffer
    *
    */
-  void getResults(float *c) {}
+  virtual void getResults(float *c) = 0;
+
+  virtual ~Runner() = default;
 };
 
 }

@@ -7,6 +7,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake/")
 set(TP_ROOT ${CMAKE_CURRENT_LIST_DIR}/external)
 
 set(BENCHMARK_SIZES ${CMAKE_CURRENT_LIST_DIR}/benchmark_sizes/resnet50.txt)
+add_compile_definitions(BENCHMARK_SIZES=${BENCHMARK_SIZES})
 set(INPUT_FORMAT "nhwc")
 add_compile_definitions(INPUT_FORMAT=${INPUT_FORMAT})
 set(FILTER_FORMAT "hwcf")
