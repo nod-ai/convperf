@@ -10,6 +10,7 @@ def compile(args):
         "-iree-llvmcpu-enable-hoist-padding",
         "-iree-llvm-debug-symbols=false",
         "-iree-vm-bytecode-module-strip-source-map=true",
+        "-iree-llvm-keep-linker-artifacts",
         "-iree-vm-emit-polyglot-zip=false",
         f"{args.mlir_file}" + ".mlir",
         "-o",
