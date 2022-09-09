@@ -26,6 +26,8 @@ def configure_convolution(args):
     F = [None for _ in range(4)]
     U = [None for _ in range(4)]
     P = [(None, None) for _ in range(4)]
+    ph = int(args.padding[0])
+    pw = int(args.padding[1])
     for i, (letter, letter_f) in enumerate(zip(args.input_format, args.filter_format)):
         if letter == 'n':
             I[i] = args.N
@@ -40,13 +42,13 @@ def configure_convolution(args):
         if letter == 'h':
             I[i] = args.Hin
             O[i] = args.Hout
-            P[i] = (1, 1)
+            P[i] = (ph, ph)
         if letter_f == 'h':
             F[i] = args.Kh
         if letter == 'w':
             I[i] = args.Win
             O[i] = args.Wout
-            P[i] = (1, 1)
+            P[i] = (pw, pw)
         if letter_f == 'w':
             F[i] = args.Kw
         if letter_f == 'f':

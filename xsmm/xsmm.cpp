@@ -26,19 +26,24 @@ XSMMRunner::XSMMRunner(const ConvParams &params) : params(params) {
   int nThreads = 1; /* number of threads */
 #endif
 
+  paddedInputShape = params.computePaddedShape(params.inputShape);
+
   cfg = setup_libxsmm_dnn_conv(
     cnn_dtype, cnn_dtype, params.inputShape.N, params.inputShape.H, params.inputShape.W,
     params.inputShape.C, params.filterShape.N, params.filterShape.H, params.filterShape.W,
-    params.strides.H, params.strides.W, params.padding.H, params.padding.W, params.padding.H,
-    params.padding.W, params.padding.H, params.padding.W, bc, bk, nThreads,
-    my_fuse, overwrite_output, avoid_bwd_wt_trans, zero_output_rims_fwd);
+    params.strides.H, params.strides.W, params.padding.H, params.padding.W,
+    params.padding.H, params.padding.W, 0, 0,
+    bc, bk, nThreads, my_fuse, overwrite_output, avoid_bwd_wt_trans, zero_output_rims_fwd);
 
-  input_save = (float*)libxsmm_aligned_malloc((size_t) params.inputShape.getLinearizedShape() *sizeof(float), 2097152);
+  input_save = (float*)libxsmm_aligned_malloc((size_t) paddedInputShape.getLinearizedShape() *sizeof(float), 2097152);
   output_save = (float*)libxsmm_aligned_malloc((size_t) params.outputShape.getLinearizedShape() *sizeof(float), 2097152);
   filter_save = (float*)libxsmm_aligned_malloc((size_t) params.filterShape.getLinearizedShape() *sizeof(float), 2097152);
-  input_libxsmm = (float*)libxsmm_aligned_malloc((size_t) params.inputShape.getLinearizedShape() *sizeof(float), 2097152);
+
+  input_libxsmm = (float*)libxsmm_aligned_malloc((size_t) paddedInputShape.getLinearizedShape() *sizeof(float), 2097152);
   output_libxsmm = (float*)libxsmm_aligned_malloc((size_t) params.outputShape.getLinearizedShape() *sizeof(float), 2097152);
   filter_libxsmm = (float*)libxsmm_aligned_malloc((size_t) params.filterShape.getLinearizedShape() *sizeof(float), 2097152);
+
+  input_pad = (float*)libxsmm_aligned_malloc((size_t) paddedInputShape.getLinearizedShape() *sizeof(float), 2097152);
 }
 
 
@@ -46,12 +51,16 @@ void XSMMRunner::setup(const float *input, const float *filter, float *output) {
 
   if (params.inputShape.format == "nhwc") {
     input_nchw = (float*)libxsmm_aligned_malloc((size_t) params.inputShape.getLinearizedShape() *sizeof(float), 2097152);
-    output_nchw = (float*)libxsmm_aligned_malloc((size_t) params.outputShape.getLinearizedShape() *sizeof(float), 2097152);
     convert_nhwc_to_nchw(input, input_nchw, params.inputShape);
+    copy_nchw_with_pad(input_nchw, input_pad, params.inputShape, params.padding);
+    libxsmm_free(input_nchw);
+    output_nchw = (float*)libxsmm_aligned_malloc((size_t) params.outputShape.getLinearizedShape() *sizeof(float), 2097152);
   } else {
-    input_nchw = (float *) input;
+    copy_nchw_with_pad(input, input_pad, params.inputShape, params.padding);
     output_nchw = output;
   }
+  set_zeropad_nchw(input_pad, paddedInputShape.N, paddedInputShape.C,
+                   paddedInputShape.H, paddedInputShape.W, params.padding.H, params.padding.W);
 
   if (params.filterShape.format == "hwcf") {
     filter_kcrs = (float*)libxsmm_aligned_malloc((size_t) params.filterShape.getLinearizedShape() *sizeof(float), 2097152);
@@ -60,21 +69,20 @@ void XSMMRunner::setup(const float *input, const float *filter, float *output) {
     filter_kcrs = (float *) filter;
   }
 
-  copy_buf((float *)input_nchw, input_save, params.inputShape.getLinearizedShape());
-  zero_buf(output_save, params.outputShape.getLinearizedShape());
-  copy_buf(output, output_save, params.outputShape.getLinearizedShape());
+  copy_buf((float *)input_pad, input_save, paddedInputShape.getLinearizedShape());
+  copy_buf(output_nchw, output_save, params.outputShape.getLinearizedShape());
 
   /* first touch LIBXSMM */
-  zero_buf(input_libxsmm, params.inputShape.getLinearizedShape());
+  zero_buf(input_libxsmm, paddedInputShape.getLinearizedShape());
   zero_buf(filter_libxsmm, params.filterShape.getLinearizedShape());
   zero_buf(output_libxsmm, params.outputShape.getLinearizedShape());
 
   /* Copy input/output/weight tensors to correct format */
   tensor_copy_NCHW_to_NCHWc(input_save, input_libxsmm,
-                            params.inputShape.N,
-                            params.inputShape.C,
-                            params.inputShape.H,
-                            params.inputShape.W,
+                            paddedInputShape.N,
+                            paddedInputShape.C,
+                            paddedInputShape.H,
+                            paddedInputShape.W,
                             cfg.ifmblock);
   tensor_copy_NCHW_to_NCHWc(output_save, output_libxsmm,
                             params.outputShape.N,
@@ -124,13 +132,13 @@ void XSMMRunner::getResults(float *output) {
 }
 
 XSMMRunner::~XSMMRunner() {
-  if (params.inputShape.format == "nhwc") {
-    libxsmm_free(input_nchw);
-    libxsmm_free(output_nchw);
-  }
   if (params.filterShape.format == "hwcf") {
     libxsmm_free(filter_kcrs);
   }
+  if (params.inputShape.format == "nhwc") {
+    libxsmm_free(output_nchw);
+  }
+  libxsmm_free(input_pad);
   libxsmm_free(input_save);
   libxsmm_free(output_save);
   libxsmm_free(filter_save);

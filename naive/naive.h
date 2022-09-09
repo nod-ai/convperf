@@ -15,7 +15,7 @@ public:
 
 private:
   const ConvParams &params;
-  Shape4D paddedInputShape, paddedOutputShape;
+  Shape4D paddedInputShape;
   float *input_nchw, *output_nchw, *filter_fchw;
 };
 

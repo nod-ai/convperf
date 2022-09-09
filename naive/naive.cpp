@@ -4,13 +4,13 @@ namespace convperf {
 
 NaiveRunner::NaiveRunner(const ConvParams &params) : params(params) {
   paddedInputShape = params.computePaddedShape(params.inputShape);
-  paddedOutputShape = params.computePaddedShape(params.outputShape);
 }
 
 void NaiveRunner::setup(const float *input, const float *filter, float *output) {
+
   if (params.inputShape.format == "nhwc") {
-    input_nchw = (float *) malloc(params.inputShape.getLinearizedShape() * sizeof(float));
-    output_nchw = (float *) malloc(params.outputShape.getLinearizedShape() * sizeof(float));
+    input_nchw = (float *) calloc(params.inputShape.getLinearizedShape(), sizeof(float));
+    output_nchw = (float *) calloc(params.outputShape.getLinearizedShape(), sizeof(float));
     convert_nhwc_to_nchw(input, input_nchw, params.inputShape);
   } else {
     input_nchw = (float *)input;
@@ -33,7 +33,7 @@ void NaiveRunner::run(const float *input, const float *filter, float *output) {
       for (int ofh = 0; ofh < params.outputShape.H; ofh++) {
         for (int ofw = 0; ofw < params.outputShape.W; ofw++) {
           GET_ELEMENT(output_nchw, b, ofm, ofh, ofw,
-                      paddedOutputShape.C, paddedOutputShape.H, paddedOutputShape.W) = 0;
+                      params.outputShape.C, params.outputShape.H, params.outputShape.W) = 0;
         }
       }
     }
@@ -51,9 +51,9 @@ void NaiveRunner::run(const float *input, const float *filter, float *output) {
               for (int kw = 0; kw < params.filterShape.W; kw++) {
                 if (ii + kw < 0 || ii + kw >= params.inputShape.W) continue;
                 GET_ELEMENT(output_nchw, b, ofm, ofh, ofw,
-                            params.outputShape.C, paddedOutputShape.H, paddedOutputShape.W)
+                            params.outputShape.C, params.outputShape.H, params.outputShape.W)
                 += GET_ELEMENT(input_nchw, b, ifm, ij + kh, ii + kw,
-                               params.inputShape.C, paddedInputShape.H, paddedInputShape.W)
+                               params.inputShape.C, params.inputShape.H, params.inputShape.W)
                 * GET_ELEMENT(filter_fchw, ofm, ifm, kh, kw,
                               params.filterShape.C, params.filterShape.H, params.filterShape.W);
               }

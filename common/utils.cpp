@@ -163,5 +163,45 @@ void convert_hwcf_to_fchw(const float *src, float *dst, Shape4D shape) {
 
 }
 
+void copy_nchw_with_pad(const float *src, float *dst, Shape4D shape, Shape2D padding) {
+  for(int i = 0; i < shape.N; i++) {
+    for(int j = 0; j < shape.C; j++) {
+      for(int k = 0; k < shape.H; k++) {
+        for(int l = 0; l < shape.W; l++) {
+          GET_ELEMENT(dst, i, j, (k + padding.H), (l + padding.W), shape.C, (shape.H + 2 * padding.H), (shape.W + 2 * padding.W)) =
+          GET_ELEMENT(src, i, j, k, l, shape.C, shape.H, shape.W);
+        }
+      }
+    }
+  }
+}
+
+void copy_nchw_without_pad(const float *src, float *dst, Shape4D shape, Shape2D padding) {
+  for(int i = 0; i < shape.N; i++) {
+    for(int j = 0; j < shape.C; j++) {
+      for(int k = 0; k < shape.H; k++) {
+        for(int l = 0; l < shape.W; l++) {
+          GET_ELEMENT(dst, i, j, k, l, shape.C, shape.H, shape.W) =
+          GET_ELEMENT(src, i, j, (k + padding.H), (l + padding.W),
+                      shape.C, (shape.H + 2 * padding.H), (shape.W + 2 * padding.W));
+        }
+      }
+    }
+  }
+}
+
+void copy_nhwc_without_pad(const float *src, float *dst, Shape4D shape, Shape2D padding) {
+  for(int i = 0; i < shape.N; i++) {
+    for(int j = 0; j < shape.H; j++) {
+      for(int k = 0; k < shape.W; k++) {
+        for(int l = 0; l < shape.C; l++) {
+          GET_ELEMENT(dst, i, j, k, l, shape.H, shape.W, shape.C) =
+          GET_ELEMENT(src, i, j, (k + padding.H), (l + padding.W),
+                      (shape.H + 2 * padding.H), (shape.W + 2 * padding.W), shape.C);
+        }
+      }
+    }
+  }
+}
 
 }

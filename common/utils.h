@@ -75,4 +75,8 @@ void convert_nhwc_to_nchw(const float *src, float *dst, Shape4D shape);
 void convert_nchw_to_nhwc(const float *src, float *dst, Shape4D shape);
 void convert_hwcf_to_fchw(const float *src, float *dst, Shape4D shape);
 
+void copy_nchw_with_pad(const float *src, float *dst, Shape4D shape, Shape2D padding);
+void copy_nchw_without_pad(const float *src, float *dst, Shape4D shape, Shape2D padding);
+void copy_nhwc_without_pad(const float *src, float *dst, Shape4D shape, Shape2D padding);
+
 }

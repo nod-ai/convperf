@@ -16,11 +16,12 @@ public:
 
 private:
   libxsmm_dnn_conv_config cfg;
+  float *input_pad;
   float *input_save, *output_save, *filter_save;
   float *input_nchw, *output_nchw, *filter_kcrs;
   float *input_libxsmm, *output_libxsmm, *filter_libxsmm;
   const ConvParams &params;
-  Shape4D paddedInputShape, paddedOutputShape;
+  Shape4D paddedInputShape;
 };
 
 }
