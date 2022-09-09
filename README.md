@@ -38,3 +38,18 @@ func.func @conv2d_1x230x230x3_7x7x3x64(%arg0: tensor<1x230x230x3xf32>, %arg1: te
   return %2 : tensor<1x112x112x64xf32>
 }
 ```
+
+And here is an example with padding.
+```
+func.func @conv2d_1x56x56x64_3x3x64x64(%arg0: tensor<1x56x56x64xf32>, %arg1: tensor<3x3x64x64xf32>) -> tensor<1x56x56x64xf32> {
+  %cst_0 = arith.constant 0.000000e+00 : f32
+  %0 = linalg.init_tensor [1, 56, 56, 64] : tensor<1x56x56x64xf32>
+  %1 = linalg.fill ins(%cst_0 : f32) outs(%0 : tensor<1x56x56x64xf32>) -> tensor<1x56x56x64xf32>
+  %2 = tensor.pad %arg0 low[0, 1, 1, 0] high[0, 1, 1, 0] {
+         ^bb0(%arg2: index, %arg3: index, %arg4: index, %arg5: index):
+                tensor.yield %cst_0 : f32
+       } : tensor<1x56x56x64xf32> to tensor<1x58x58x64xf32>
+  %3 = linalg.conv_2d_nhwc_hwcf {dilations = dense<1> : tensor<2xi64>, strides = dense<1> : tensor<2xi64>} ins(%2, %arg1 : tensor<1x58x58x64xf32>, tensor<3x3x64x64xf32>) outs(%1 : tensor<1x56x56x64xf32>) -> tensor<1x56x56x64xf32>
+  return %3 : tensor<1x56x56x64xf32>
+}
+```
