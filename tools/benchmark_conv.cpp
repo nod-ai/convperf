@@ -42,7 +42,7 @@ static void BenchmarkFunction(benchmark::State &state, const convperf::ConvParam
   if (verify) {
     runner->getResults(output);
     auto verifier = convperf::NaiveRunner(param);
-    float *golden = static_cast<float *>(std::aligned_alloc(alignment, param.outputShape.getLinearizedShape() * sizeof(float)));
+    float *golden = static_cast<float *>(std::aligned_alloc(alignment, linearizedOutputShape * sizeof(float)));
     verifier.setup(input, filter, golden);
     verifier.run(input, filter, golden);
     verifier.getResults(golden);
