@@ -46,7 +46,7 @@ static void BenchmarkFunction(benchmark::State &state, const convperf::ConvParam
     verifier.setup(input, filter, golden);
     verifier.run(input, filter, golden);
     verifier.getResults(golden);
-    float error = convperf::checkTensorsForEquality(golden, output, param.outputShape);
+    float error = convperf::checkTensorsForEquality(golden, output, linearizedOutputShape);
     if (error > tol) {
       printf("Accuracy verification failed [%f] > [%f]\n", error, tol);
     }

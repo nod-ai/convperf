@@ -69,7 +69,7 @@ struct ParamFileReader {
 
 void init_random_tensor(float *tensor, size_t shape);
 void write_tensor4d_to_file(const float *tensor, Shape4D shape, std::string filename);
-float checkTensorsForEquality(float *a, float *b, Shape4D shape);
+float checkTensorsForEquality(float *a, float *b, size_t shape);
 
 void convert_nhwc_to_nchw(const float *src, float *dst, Shape4D shape);
 void convert_nchw_to_nhwc(const float *src, float *dst, Shape4D shape);
