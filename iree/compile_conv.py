@@ -7,6 +7,7 @@ def compile(args):
         "-iree-mlir-to-vm-bytecode-module",
         "-iree-hal-target-backends=llvm-cpu",
         "-iree-llvm-target-cpu-features=host",
+        "-iree-flow-enable-fuse-padding-into-consumer-ops",
         "-iree-llvmcpu-enable-hoist-padding",
         "-iree-llvm-debug-symbols=false",
         "-iree-vm-bytecode-module-strip-source-map=true",

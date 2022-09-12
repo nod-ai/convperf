@@ -5,6 +5,7 @@ import subprocess
 import multiprocessing
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 plt.style.use('ggplot')
 
 BAR_WIDTH = 0.15
@@ -14,7 +15,10 @@ BAR_COLORS = {
 }
 
 def run(cmd):
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    bench_env = os.environ.copy()
+    bench_env["OMP_NUM_THREADS"] = "32"
+    cmd = ['numactl', '--cpunodebind=1', '-l'] + cmd
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=bench_env)
     output = p.communicate()
     runtimes = []
     for line in output[0].decode('utf-8').split('\n'):
@@ -28,7 +32,7 @@ def run(cmd):
 def benchmark_iree(args):
     cmd = [args.benchmark_tool] \
         + ['-r', 'iree', \
-           f'--task_topology_max_group_count={multiprocessing.cpu_count()}']
+           f'--task_topology_max_group_count=31']
     return run(cmd)
 
 def benchmark_xsmm(args):
