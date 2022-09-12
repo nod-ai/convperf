@@ -72,16 +72,9 @@ std::vector<ConvParams> ParamFileReader::readParams(const std::string &filename)
   return params;
 }
 
-void init_random_tensor4d(float *tensor, Shape4D shape) {
-  for (int i = 0; i < shape[0]; i++) {
-    for (int j = 0; j < shape[1]; j++) {
-      for (int k = 0; k < shape[2]; k++) {
-        for (int l = 0; l < shape[3]; l++) {
-          GET_ELEMENT(tensor, i, j, k, l, shape[1], shape[2], shape[3])
-            = ((float) rand() / (float) RAND_MAX);
-        }
-      }
-    }
+void init_random_tensor(float *tensor, size_t shape) {
+  for (size_t i = 0; i < shape; i++) {
+    tensor[i] = ((float) rand() / (float) RAND_MAX);
   }
 }
 

@@ -67,7 +67,7 @@ struct ParamFileReader {
   std::vector<ConvParams> readParams(const std::string &filename);
 };
 
-void init_random_tensor4d(float *tensor, Shape4D shape);
+void init_random_tensor(float *tensor, size_t shape);
 void write_tensor4d_to_file(const float *tensor, Shape4D shape, std::string filename);
 float checkTensorsForEquality(float *a, float *b, Shape4D shape);
 

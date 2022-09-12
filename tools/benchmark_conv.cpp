@@ -21,11 +21,14 @@ static void BenchmarkFunction(benchmark::State &state, const convperf::ConvParam
   bool verify{true};
   float *input, *filter, *output;
   float tol{5e-4};
-  input = static_cast<float *>(std::aligned_alloc(alignment, param.inputShape.getLinearizedShape() * sizeof(float)));
-  filter = static_cast<float *>(std::aligned_alloc(alignment, param.filterShape.getLinearizedShape() * sizeof(float)));
-  output = static_cast<float *>(std::aligned_alloc(alignment, param.outputShape.getLinearizedShape() * sizeof(float)));
-  init_random_tensor4d(input, param.inputShape);
-  init_random_tensor4d(filter, param.filterShape);
+  size_t linearizedInputShape = param.inputShape.getLinearizedShape();
+  input = static_cast<float *>(std::aligned_alloc(alignment, linearizedInputShape * sizeof(float)));
+  size_t linearizedFilterShape = param.filterShape.getLinearizedShape();
+  filter = static_cast<float *>(std::aligned_alloc(alignment, linearizedFilterShape * sizeof(float)));
+  size_t linearizedOutputShape = param.outputShape.getLinearizedShape();
+  output = static_cast<float *>(std::aligned_alloc(alignment, linearizedOutputShape * sizeof(float)));
+  convperf::init_random_tensor(input, linearizedInputShape);
+  convperf::init_random_tensor(filter, linearizedFilterShape);
   std::unique_ptr<convperf::Runner> runner;
   if (runnerType == "iree") {
     runner = std::make_unique<convperf::IREERunner>(param);
