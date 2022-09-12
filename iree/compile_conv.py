@@ -17,9 +17,17 @@ def compile(args):
         "-o",
         f"{args.mlir_file}.vmfb",
     ]
+    out = subprocess.PIPE
+    if args.dump_output:
+        compile_flags += [
+            '-mlir-print-ir-after-all'
+        ]
+        out = open('mlir_dump.txt', 'w')
     combined = [args.compile_tool] + compile_flags
     print(' '.join(combined))
-    subprocess.run(combined, check=True)
+    subprocess.run(combined, check=True, stderr=out)
+    if args.dump_output:
+        out.close()
 
 def configure_convolution(args):
     I = [None for _ in range(4)]
@@ -111,6 +119,7 @@ def define_options(parser):
     parser.add_argument('--compile_tool', type=str, help='Path to iree-compile')
     parser.add_argument('--input_format', type=str, help='Input format', choices=['nhwc', 'nchw'])
     parser.add_argument('--filter_format', type=str, help='Filter format', choices=['hwcf', 'fchw'])
+    parser.add_argument('--dump_output', action='store_true')
 
 parser = argparse.ArgumentParser()
 define_options(parser)
