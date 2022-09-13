@@ -20,7 +20,7 @@ cmake --build build
 ```
 # Run Benchmarks
 ```
-python convperf.py --benchmark_tool build/tools/benchmark_conv --runners iree,xsmm --benchmark_sizes benchmark_sizes/resnet50.txt
+python convperf.py --benchmark_tool build/tools/benchmark_conv --runners iree,xsmm --benchmark_sizes benchmark_sizes/resnet50.json
 ```
 This will run the benchmarks and write the results to runtimes.csv.
 This file can be visualized with the following command.
