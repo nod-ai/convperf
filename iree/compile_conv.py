@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import subprocess
+import json
 
 def compile(args):
     compile_flags = [
@@ -99,16 +100,24 @@ def configure_convolution(args):
 def compile_sizes(args):
     all_convs = ''
     with open(args.sizes_file, 'r') as f:
-        for line in f.readlines():
-            params = line.rstrip().split(',')
-            args.N, args.Cin, args.Hin, args.Win = params[0].split('x')
-            args.Cout, args.Cin, args.Kh, args.Kw = params[1].split('x')
-            args.N, args.Cout, args.Hout, args.Wout = params[2].split('x')
-            args.strides = [params[3], params[4]]
-            args.padding = [params[5], params[6]]
-            args.dilations = [params[7], params[8]]
-            conv = configure_convolution(args)
-            all_convs += conv
+        data = json.load(f)
+    for config in data["configs"]:
+        args.N = config['input']['N']
+        args.Cin = config['input']['C']
+        args.Hin = config['input']['H']
+        args.Win = config['input']['W']
+        args.Cout = config['output']['C']
+        args.Hout = config['output']['H']
+        args.Wout = config['output']['W']
+        args.Kh = config['filter']['H']
+        args.Kw = config['filter']['W']
+        args.strides = config['strides']
+        args.padding = config['padding']
+        args.dilations = config['dilations']
+        args.input_format = config['input']['format']
+        args.filter_format = config['filter']['format']
+        conv = configure_convolution(args)
+        all_convs += conv
     args.mlir_file = "convs"
     with open(args.mlir_file + ".mlir", "w") as f:
         f.write(all_convs)
@@ -117,8 +126,6 @@ def compile_sizes(args):
 def define_options(parser):
     parser.add_argument('--sizes_file', type=str, help='File containing sizes to benchmark')
     parser.add_argument('--compile_tool', type=str, help='Path to iree-compile')
-    parser.add_argument('--input_format', type=str, help='Input format', choices=['nhwc', 'nchw'])
-    parser.add_argument('--filter_format', type=str, help='Filter format', choices=['hwcf', 'fchw'])
     parser.add_argument('--dump_output', action='store_true')
 
 parser = argparse.ArgumentParser()

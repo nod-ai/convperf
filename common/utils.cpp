@@ -3,6 +3,8 @@
 #include <fstream>
 #include <stdlib.h>
 #include <iostream>
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
 
 namespace convperf {
 
@@ -38,35 +40,31 @@ Shape4D ConvParams::computePaddedShape(const Shape4D &shape) const {
 
 std::vector<ConvParams> ParamFileReader::readParams(const std::string &filename) {
   std::ifstream sizesFile(filename, std::ios::in);
+  json data = json::parse(sizesFile);
   std::vector<ConvParams> params;
-  while (!sizesFile.eof()) {
-    std::string line;
-    std::getline(sizesFile, line);
-    if (line.empty()) break;
-    if (line[0] == '#') continue;
-    std::replace(line.begin(), line.end(), ',', ' ');
-    std::stringstream linestream(line);
-    std::string inputShape, filterShape, outputShape;
+  for (auto &config : data["configs"]) {
     ConvParams param;
-    linestream >> inputShape >> filterShape >> outputShape
-               >> param.strides.H >> param.strides.W
-               >> param.padding.H >> param.padding.W
-               >> param.dilations.H >> param.dilations.W;
-    std::replace(inputShape.begin(), inputShape.end(), 'x', ' ');
-    std::stringstream is(inputShape);
-    is >> param.inputShape.N >> param.inputShape.C >>
-          param.inputShape.H >> param.inputShape.W;
-    param.inputShape.format = STR(INPUT_FORMAT);
-    std::replace(outputShape.begin(), outputShape.end(), 'x', ' ');
-    std::stringstream os(outputShape);
-    os >> param.outputShape.N >> param.outputShape.C >>
-          param.outputShape.H >> param.outputShape.W;
-    param.outputShape.format = STR(INPUT_FORMAT);
-    std::replace(filterShape.begin(), filterShape.end(), 'x', ' ');
-    std::stringstream fs(filterShape);
-    fs >> param.filterShape.N >> param.filterShape.C >>
-          param.filterShape.H >> param.filterShape.W;
-    param.filterShape.format = STR(FILTER_FORMAT);
+    param.inputShape.N = config["input"]["N"].get<int>();
+    param.inputShape.C = config["input"]["C"].get<int>();
+    param.inputShape.H = config["input"]["H"].get<int>();
+    param.inputShape.W = config["input"]["W"].get<int>();
+    param.inputShape.format = config["input"]["format"].get<std::string>();
+    param.outputShape.N = config["output"]["N"].get<int>();
+    param.outputShape.C = config["output"]["C"].get<int>();
+    param.outputShape.H = config["output"]["H"].get<int>();
+    param.outputShape.W = config["output"]["W"].get<int>();
+    param.outputShape.format = config["output"]["format"].get<std::string>();
+    param.filterShape.N = config["filter"]["F"].get<int>();
+    param.filterShape.C = config["filter"]["C"].get<int>();
+    param.filterShape.H = config["filter"]["H"].get<int>();
+    param.filterShape.W = config["filter"]["W"].get<int>();
+    param.filterShape.format = config["filter"]["format"].get<std::string>();
+    param.strides.H = config["strides"][0].get<int>();
+    param.strides.W = config["strides"][1].get<int>();
+    param.padding.H = config["padding"][0].get<int>();
+    param.padding.W = config["padding"][1].get<int>();
+    param.dilations.H = config["dilations"][0].get<int>();
+    param.dilations.W = config["dilations"][1].get<int>();
     params.push_back(param);
   }
   return params;

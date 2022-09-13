@@ -4,8 +4,6 @@ set(_TRANSLATE_TOOL_EXECUTABLE $<TARGET_FILE:iree-compile>)
 set(PYTHON_TOOL ${CMAKE_CURRENT_LIST_DIR}/compile_conv.py)
 set(_ARGS)
 list(APPEND _ARGS "--sizes_file=${BENCHMARK_SIZES}")
-list(APPEND _ARGS "--input_format=${INPUT_FORMAT}")
-list(APPEND _ARGS "--filter_format=${FILTER_FORMAT}")
 list(APPEND _ARGS "--compile_tool=${_TRANSLATE_TOOL_EXECUTABLE}")
 add_custom_command(
   OUTPUT convs.vmfb

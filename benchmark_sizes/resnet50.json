@@ -1,0 +1,59 @@
+{
+    "configs": [
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 3,
+                "H": 230,
+                "W": 230,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 64,
+                "C": 3,
+                "H": 7,
+                "W": 7,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 64,
+                "H": 112,
+                "W": 112,
+                "format": "nhwc"
+            },
+            "strides": [2, 2],
+            "padding": [0, 0],
+            "dilations": [1, 1]
+        },
+
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 64,
+                "H": 56,
+                "W": 56,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 64,
+                "C": 64,
+                "H": 3,
+                "W": 3,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 64,
+                "H": 56,
+                "W": 56,
+                "format": "nhwc"
+            },
+            "strides": [1, 1],
+            "padding": [1, 1],
+            "dilations": [1, 1]
+        }
+    ]
+}
