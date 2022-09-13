@@ -6,6 +6,7 @@ import multiprocessing
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import json
 plt.style.use('ggplot')
 
 BAR_WIDTH = 0.15
@@ -51,31 +52,51 @@ def benchmark(args):
             print("Unsupported runner!")
     return runtimes
 
+def shape_str(config, is_filter):
+    if is_filter:
+        N = config['F']
+    else:
+        N = config['N']
+    C = config['C']
+    H = config['H']
+    W = config['W']
+    p_str = ''
+    for v in config['format']:
+        if v == 'n' or v == 'f':
+            p_str += f'{N}x'
+        if v == 'h':
+            p_str += f'{H}x'
+        if v == 'w':
+            p_str += f'{W}x'
+        if v == 'c':
+            p_str += f'{C}x'
+    p_str = p_str[:-1]
+    return p_str
+
 def get_sizes(args):
+    with open(args.benchmark_sizes, "r") as f:
+        data = json.load(f)
     input_sizes = []
     filter_sizes = []
-    str = 'Method,'
-    with open(args.benchmark_sizes, "r") as f:
-        for line in f.readlines():
-            tokens = line.split(',')
-            input_sizes.append(tokens[0])
-            filter_sizes.append(tokens[1])
-            str += tokens[0] + "_" + tokens[1] + ","
-        str = str[:-1]
-        str += "\n"
-    return input_sizes, filter_sizes, str
+    p_str = 'Method,'
+    for config in data["configs"]:
+        input_sizes.append(shape_str(config['input'], False))
+        filter_sizes.append(shape_str(config['filter'], True))
+        p_str = input_sizes[-1] + "_" + filter_sizes[-1] + ","
+    p_str = p_str[:-1] + '\n'
+    return input_sizes, filter_sizes, p_str
 
 def save_runtimes(args, runtimes):
-    input_sizes, filter_sizes, str = get_sizes(args)
+    input_sizes, filter_sizes, p_str = get_sizes(args)
     with open("runtimes.csv", "w") as f:
-        f.write(str)
+        f.write(p_str)
         for method, runtime in runtimes.items():
-            str = method + ","
+            p_str = method + ","
             for time in runtime:
-                str += f"{time},"
-            str = str[:-1]
-            str += "\n"
-            f.write(str)
+                p_str += f"{time},"
+            p_str = p_str[:-1]
+            p_str += "\n"
+            f.write(p_str)
 
 def visualize(args):
     generate_x = lambda i, labels : np.arange(len(labels)) + i * BAR_WIDTH
