@@ -7,6 +7,7 @@ def compile(args):
     compile_flags = [
         "-iree-mlir-to-vm-bytecode-module",
         "-iree-hal-target-backends=llvm-cpu",
+        "-iree-hal-benchmark-dispatch-repeat-count=100",
         "-iree-llvm-target-cpu-features=host",
         "-iree-flow-enable-fuse-padding-into-consumer-ops",
         "-iree-llvmcpu-enable-hoist-padding",

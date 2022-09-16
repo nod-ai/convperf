@@ -10,6 +10,9 @@
 using namespace llvm;
 cl::opt<std::string> runnerType("r", cl::desc("Specify method to benchmark"),
                                 cl::value_desc("runner"), cl::init("iree"));
+cl::opt<int> batchSize("batch_size", cl::desc("The number of batch size, which is expected to match"
+                       "iree-hal-benchmark-dispatch-repeat-count when translating the module"),
+                       cl::value_desc("batch_size"), cl::init(100));
 
 union Runner {
   std::unique_ptr<convperf::IREERunner> iree;
@@ -36,9 +39,10 @@ static void BenchmarkFunction(benchmark::State &state, const convperf::ConvParam
     runner = std::make_unique<convperf::XSMMRunner>(param);
   }
   runner->setup(input, filter, output);
-  for (auto _ : state) {
+  while (state.KeepRunningBatch(batchSize)) {
     runner->run(input, filter, output);
   }
+  state.SetItemsProcessed(state.iterations());
   if (verify) {
     runner->getResults(output);
     auto verifier = convperf::NaiveRunner(param);
@@ -64,6 +68,7 @@ int main(int argc, char *argv[]) {
   std::cout << "Benchmarking ..." << runnerType << "\n";
   convperf::ParamFileReader reader;
   auto params = reader.readParams(STR(BENCHMARK_SIZES));
+  std::cout << "Using batch size = " << batchSize << "\n";
   for (const auto &param : params) {
     std::string msg = "Benchmarking => Input : [" + param.inputShape.str() + "], Filter : [" + param.filterShape.str() + "], Output : ["
                     + param.outputShape.str() + "]\n";
