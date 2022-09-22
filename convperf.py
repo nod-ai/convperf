@@ -82,7 +82,7 @@ def get_sizes(args):
     for config in data["configs"]:
         input_sizes.append(shape_str(config['input'], False))
         filter_sizes.append(shape_str(config['filter'], True))
-        p_str = input_sizes[-1] + "_" + filter_sizes[-1] + ","
+        p_str += input_sizes[-1] + "_" + filter_sizes[-1] + ","
     p_str = p_str[:-1] + '\n'
     return input_sizes, filter_sizes, p_str
 
