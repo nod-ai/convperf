@@ -73,51 +73,47 @@ def shape_str(config, is_filter):
     p_str = p_str[:-1]
     return p_str
 
-def get_sizes(args):
-    with open(args.benchmark_sizes, "r") as f:
-        data = json.load(f)
-    input_sizes = []
-    filter_sizes = []
-    p_str = 'Method,'
-    for config in data["configs"]:
-        input_sizes.append(shape_str(config['input'], False))
-        filter_sizes.append(shape_str(config['filter'], True))
-        p_str += input_sizes[-1] + "_" + filter_sizes[-1] + ","
-    p_str = p_str[:-1] + '\n'
-    return input_sizes, filter_sizes, p_str
+def compute_flops(config):
+    N = config["input"]["N"]
+    Cout = config["output"]["C"]
+    Cin = config["input"]["C"]
+    Hout = config["output"]["H"]
+    Wout = config["output"]["W"]
+    Kh = config["filter"]["H"]
+    Kw = config["filter"]["W"]
+    flops = 2 * N * Cin * Cout * Hout * Wout * Kh * Kw
+    return flops
+
+def compute_labels_and_flops(configs):
+    labels = []
+    flops = []
+    for config in configs:
+        labels.append(shape_str(config["input"], False) + "_" + shape_str(config["filter"], True))
+        flops.append(compute_flops(config))
+    return labels, flops
 
 def save_runtimes(args, runtimes):
-    input_sizes, filter_sizes, p_str = get_sizes(args)
-    with open("runtimes.csv", "w") as f:
-        f.write(p_str)
-        for method, runtime in runtimes.items():
-            p_str = method + ","
-            for time in runtime:
-                p_str += f"{time},"
-            p_str = p_str[:-1]
-            p_str += "\n"
-            f.write(p_str)
+    runtimes["benchmark_sizes"] = args.benchmark_sizes
+    with open("runtimes.json", "w") as f:
+        json.dump(runtimes, f, ensure_ascii=False, indent=4, sort_keys=True)
 
 def visualize(args):
     generate_x = lambda i, labels : np.arange(len(labels)) + i * BAR_WIDTH
-    labels = None
-    with open("runtimes.csv", "r") as f:
-        i = 0
-        for line in f.readlines():
-            tokens = line.rstrip().split(',')
-            if i == 0:
-                labels = tokens[1:]
-                i += 1
-                continue
-            method = tokens[0]
-            runtimes = [float(x)/1e6 for x in tokens[1:]]
-            plt.bar(generate_x(i-1, labels), runtimes, BAR_WIDTH, label=method, color=BAR_COLORS[method])
-            i += 1
+    with open(args.runtimes_file, "r") as f:
+        data = json.load(f)
+    with open(data["benchmark_sizes"], "r") as f:
+        sizes = json.load(f)
+    del data["benchmark_sizes"]
+    labels, flops = compute_labels_and_flops(sizes["configs"])
+    for i, method in enumerate(data.keys()):
+        speed = [(y / x / 1e6) for x, y in zip(data[method], flops)] 
+        print(f"MFLOPS[{method}]: {speed}")
+        plt.bar(generate_x(i, labels), speed, BAR_WIDTH, label=method, color=BAR_COLORS[method])
 
     x_pos = [i + 0.5*(len(labels) - 1)*BAR_WIDTH for i in range(len(labels))]
     plt.xticks(x_pos, labels, rotation=90, fontsize=5)
     plt.xlabel('Convolution sizes')
-    plt.ylabel('Execution time(ms)')
+    plt.ylabel('MFLOPS')
     plt.title("2D Convolution in fp32")
     plt.legend(loc='best')
     plt.savefig('convs.png', dpi=300, bbox_inches='tight')
