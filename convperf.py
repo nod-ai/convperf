@@ -15,9 +15,9 @@ BAR_COLORS = {
     'iree': 'blue',
 }
 
-def run(cmd):
+def run(cmd, args):
     bench_env = os.environ.copy()
-    bench_env["OMP_NUM_THREADS"] = "32"
+    bench_env["OMP_NUM_THREADS"] = f"{args.num_threads}"
     cmd = ['numactl', '--cpunodebind=1', '-l'] + cmd
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=bench_env)
     output = p.communicate()
@@ -32,14 +32,15 @@ def run(cmd):
 
 def benchmark_iree(args):
     cmd = [args.benchmark_tool] \
-        + ['-r', 'iree', \
-           f'--task_topology_max_group_count=31']
-    return run(cmd)
+        + ['-r', 'iree']
+    if args.num_threads > 1:
+        cmd += [f'--task_topology_max_group_count={args.num_threads-1}']
+    return run(cmd, args)
 
 def benchmark_xsmm(args):
     cmd = [args.benchmark_tool] \
         + ['-r', 'xsmm']
-    return run(cmd)
+    return run(cmd, args)
 
 def benchmark(args):
     runtimes = {"iree": [], "xsmm": []}
@@ -124,6 +125,7 @@ def define_options(parser):
     parser.add_argument('--visualize', action=argparse.BooleanOptionalAction)
     parser.add_argument('--benchmark_sizes', type=str, help='Path to benchmark sizes file')
     parser.add_argument('--runtimes_file', type=str, help='Path to runtimes file')
+    parser.add_argument('--num_threads', type=int, help='Number of threads to run benchmark on')
 
 parser = argparse.ArgumentParser()
 define_options(parser)
