@@ -28,8 +28,8 @@
 #define IDENTIFIER STRINGIFY(local-task)
 #define CREATE_DEVICE \
    iree_hal_task_device_create( \
-        identifier, &params, executor, /*loader_count=*/1, &loader, \
-	device_allocator, host_allocator, out_device)
+        identifier, &params, /*queue_count=*/1, &executor, /*loader_count=*/1, \
+        &loader, device_allocator, host_allocator, out_device)
 #define PARAMS_T iree_hal_task_device_params_t
 #define INIT_PARAMS iree_hal_task_device_params_initialize
 #define CREATE_TASK_EXECUTOR \
