@@ -5,11 +5,11 @@ import json
 
 def compile(args):
     compile_flags = [
-        "-iree-mlir-to-vm-bytecode-module",
+        "-output-format=vm-bytecode",
         "-iree-hal-target-backends=llvm-cpu",
         "-iree-hal-benchmark-dispatch-repeat-count=100",
         "-iree-llvm-target-cpu-features=host",
-        "-iree-flow-enable-fuse-padding-into-consumer-ops",
+        "-iree-flow-enable-fuse-padding-into-linalg-consumer-ops",
         "-iree-llvmcpu-enable-hoist-padding",
         "-iree-llvm-debug-symbols=false",
         "-iree-vm-bytecode-module-strip-source-map=true",
@@ -73,7 +73,7 @@ def configure_convolution(args):
         conv_mlir = \
         f"func.func @conv2d_{I[0]}x{I[1]}x{I[2]}x{I[3]}_{F[0]}x{F[1]}x{F[2]}x{F[3]}(%arg0: tensor<{I[0]}x{I[1]}x{I[2]}x{I[3]}xf32>, %arg1: tensor<{F[0]}x{F[1]}x{F[2]}x{F[3]}xf32>) -> tensor<{O[0]}x{O[1]}x{O[2]}x{O[3]}xf32> {{\n" + \
         "  %cst_0 = arith.constant 0.000000e+00 : f32\n" + \
-        f"  %0 = linalg.init_tensor [{O[0]}, {O[1]}, {O[2]}, {O[3]}] : tensor<{O[0]}x{O[1]}x{O[2]}x{O[3]}xf32>\n" + \
+        f"  %0 = tensor.empty() : tensor<{O[0]}x{O[1]}x{O[2]}x{O[3]}xf32>\n" + \
         f"  %1 = linalg.fill ins(%cst_0 : f32) outs(%0 : tensor<{O[0]}x{O[1]}x{O[2]}x{O[3]}xf32>) -> tensor<{O[0]}x{O[1]}x{O[2]}x{O[3]}xf32>\n" + \
         f"  %2 = linalg.conv_2d_{args.input_format}_{args.filter_format} {{dilations = dense<{D}> : tensor<2xi64>, strides = dense<{S}> : tensor<2xi64>}} ins(%arg0, %arg1 :" + \
         f" tensor<{I[0]}x{I[1]}x{I[2]}x{I[3]}xf32>, tensor<{F[0]}x{F[1]}x{F[2]}x{F[3]}xf32>)" + \
@@ -84,7 +84,7 @@ def configure_convolution(args):
         conv_mlir = \
         f"func.func @conv2d_{I[0]}x{I[1]}x{I[2]}x{I[3]}_{F[0]}x{F[1]}x{F[2]}x{F[3]}(%arg0: tensor<{I[0]}x{I[1]}x{I[2]}x{I[3]}xf32>, %arg1: tensor<{F[0]}x{F[1]}x{F[2]}x{F[3]}xf32>) -> tensor<{O[0]}x{O[1]}x{O[2]}x{O[3]}xf32> {{\n" + \
         "  %cst_0 = arith.constant 0.000000e+00 : f32\n" + \
-        f"  %0 = linalg.init_tensor [{O[0]}, {O[1]}, {O[2]}, {O[3]}] : tensor<{O[0]}x{O[1]}x{O[2]}x{O[3]}xf32>\n" + \
+        f"  %0 = tensor.empty() : tensor<{O[0]}x{O[1]}x{O[2]}x{O[3]}xf32>\n" + \
         f"  %1 = linalg.fill ins(%cst_0 : f32) outs(%0 : tensor<{O[0]}x{O[1]}x{O[2]}x{O[3]}xf32>) -> tensor<{O[0]}x{O[1]}x{O[2]}x{O[3]}xf32>\n" + \
         f"  %2 = tensor.pad %arg0 low[{P[0][0]}, {P[1][0]}, {P[2][0]}, {P[3][0]}] high[{P[0][1]}, {P[1][1]}, {P[2][1]}, {P[3][1]}] {{\n" + \
          "         ^bb0(%arg2: index, %arg3: index, %arg4: index, %arg5: index):\n" + \
