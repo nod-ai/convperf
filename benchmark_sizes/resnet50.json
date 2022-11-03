@@ -5,8 +5,8 @@
             "input": {
                 "N": 1,
                 "C": 3,
-                "H": 230,
-                "W": 230,
+                "H": 224,
+                "W": 224,
                 "format": "nhwc"
             },
             "filter": {
@@ -24,17 +24,43 @@
                 "format": "nhwc"
             },
             "strides": [2, 2],
-            "padding": [0, 0],
+            "padding": [3, 3],
             "dilations": [1, 1]
         },
-
         {
             "operator": "conv2d",
             "input": {
                 "N": 1,
                 "C": 64,
-                "H": 56,
-                "W": 56,
+                "H": 112,
+                "W": 112,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 64,
+                "C": 64,
+                "H": 1,
+                "W": 1,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 64,
+                "H": 112,
+                "W": 112,
+                "format": "nhwc"
+            },
+            "strides": [1, 1],
+            "padding": [0, 0],
+            "dilations": [1, 1]
+        },
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 64,
+                "H": 112,
+                "W": 112,
                 "format": "nhwc"
             },
             "filter": {
@@ -47,8 +73,494 @@
             "output": {
                 "N": 1,
                 "C": 64,
+                "H": 112,
+                "W": 112,
+                "format": "nhwc"
+            },
+            "strides": [1, 1],
+            "padding": [1, 1],
+            "dilations": [1, 1]
+        },
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 64,
+                "H": 112,
+                "W": 112,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 256,
+                "C": 64,
+                "H": 1,
+                "W": 1,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 256,
+                "H": 112,
+                "W": 112,
+                "format": "nhwc"
+            },
+            "strides": [1, 1],
+            "padding": [0, 0],
+            "dilations": [1, 1]
+        },
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 256,
+                "H": 112,
+                "W": 112,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 64,
+                "C": 256,
+                "H": 1,
+                "W": 1,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 64,
+                "H": 112,
+                "W": 112,
+                "format": "nhwc"
+            },
+            "strides": [1, 1],
+            "padding": [0, 0],
+            "dilations": [1, 1]
+        },
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 256,
+                "H": 112,
+                "W": 112,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 128,
+                "C": 256,
+                "H": 1,
+                "W": 1,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 128,
+                "H": 112,
+                "W": 112,
+                "format": "nhwc"
+            },
+            "strides": [1, 1],
+            "padding": [0, 0],
+            "dilations": [1, 1]
+        },
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 128,
+                "H": 112,
+                "W": 112,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 128,
+                "C": 128,
+                "H": 3,
+                "W": 3,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 128,
                 "H": 56,
                 "W": 56,
+                "format": "nhwc"
+            },
+            "strides": [2, 2],
+            "padding": [1, 1],
+            "dilations": [1, 1]
+        },
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 256,
+                "H": 112,
+                "W": 112,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 512,
+                "C": 256,
+                "H": 1,
+                "W": 1,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 512,
+                "H": 56,
+                "W": 56,
+                "format": "nhwc"
+            },
+            "strides": [2, 2],
+            "padding": [0, 0],
+            "dilations": [1, 1]
+        },
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 512,
+                "H": 56,
+                "W": 56,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 128,
+                "C": 512,
+                "H": 1,
+                "W": 1,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 128,
+                "H": 56,
+                "W": 56,
+                "format": "nhwc"
+            },
+            "strides": [1, 1],
+            "padding": [0, 0],
+            "dilations": [1, 1]
+        },
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 128,
+                "H": 56,
+                "W": 56,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 128,
+                "C": 128,
+                "H": 3,
+                "W": 3,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 128,
+                "H": 56,
+                "W": 56,
+                "format": "nhwc"
+            },
+            "strides": [1, 1],
+            "padding": [1, 1],
+            "dilations": [1, 1]
+        },
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 256,
+                "H": 56,
+                "W": 56,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 256,
+                "C": 256,
+                "H": 3,
+                "W": 3,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 256,
+                "H": 28,
+                "W": 28,
+                "format": "nhwc"
+            },
+            "strides": [2, 2],
+            "padding": [1, 1],
+            "dilations": [1, 1]
+        },
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 256,
+                "H": 28,
+                "W": 28,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 1024,
+                "C": 256,
+                "H": 1,
+                "W": 1,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 1024,
+                "H": 28,
+                "W": 28,
+                "format": "nhwc"
+            },
+            "strides": [1, 1],
+            "padding": [0, 0],
+            "dilations": [1, 1]
+        },
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 512,
+                "H": 56,
+                "W": 56,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 1024,
+                "C": 512,
+                "H": 1,
+                "W": 1,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 1024,
+                "H": 28,
+                "W": 28,
+                "format": "nhwc"
+            },
+            "strides": [2, 2],
+            "padding": [0, 0],
+            "dilations": [1, 1]
+        },
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 1024,
+                "H": 28,
+                "W": 28,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 256,
+                "C": 1024,
+                "H": 1,
+                "W": 1,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 256,
+                "H": 28,
+                "W": 28,
+                "format": "nhwc"
+            },
+            "strides": [1, 1],
+            "padding": [0, 0],
+            "dilations": [1, 1]
+        },
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 256,
+                "H": 28,
+                "W": 28,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 256,
+                "C": 256,
+                "H": 3,
+                "W": 3,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 256,
+                "H": 28,
+                "W": 28,
+                "format": "nhwc"
+            },
+            "strides": [1, 1],
+            "padding": [1, 1],
+            "dilations": [1, 1]
+        },
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 1024,
+                "H": 28,
+                "W": 28,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 512,
+                "C": 1024,
+                "H": 1,
+                "W": 1,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 512,
+                "H": 28,
+                "W": 28,
+                "format": "nhwc"
+            },
+            "strides": [1, 1],
+            "padding": [0, 0],
+            "dilations": [1, 1]
+        },
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 512,
+                "H": 28,
+                "W": 28,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 512,
+                "C": 512,
+                "H": 3,
+                "W": 3,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 512,
+                "H": 14,
+                "W": 14,
+                "format": "nhwc"
+            },
+            "strides": [2, 2],
+            "padding": [1, 1],
+            "dilations": [1, 1]
+        },
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 512,
+                "H": 14,
+                "W": 14,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 2048,
+                "C": 512,
+                "H": 1,
+                "W": 1,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 2048,
+                "H": 14,
+                "W": 14,
+                "format": "nhwc"
+            },
+            "strides": [1, 1],
+            "padding": [0, 0],
+            "dilations": [1, 1]
+        },
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 1024,
+                "H": 28,
+                "W": 28,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 2048,
+                "C": 1024,
+                "H": 1,
+                "W": 1,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 2048,
+                "H": 14,
+                "W": 14,
+                "format": "nhwc"
+            },
+            "strides": [2, 2],
+            "padding": [1, 1],
+            "dilations": [1, 1]
+        },
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 2048,
+                "H": 14,
+                "W": 14,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 512,
+                "C": 2048,
+                "H": 1,
+                "W": 1,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 512,
+                "H": 14,
+                "W": 14,
+                "format": "nhwc"
+            },
+            "strides": [1, 1],
+            "padding": [0, 0],
+            "dilations": [1, 1]
+        },
+        {
+            "operator": "conv2d",
+            "input": {
+                "N": 1,
+                "C": 512,
+                "H": 14,
+                "W": 14,
+                "format": "nhwc"
+            },
+            "filter": {
+                "F": 512,
+                "C": 512,
+                "H": 3,
+                "W": 3,
+                "format": "hwcf"
+            },
+            "output": {
+                "N": 1,
+                "C": 512,
+                "H": 14,
+                "W": 14,
                 "format": "nhwc"
             },
             "strides": [1, 1],
