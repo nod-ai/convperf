@@ -10,6 +10,7 @@ def compile(args):
         "-iree-hal-benchmark-dispatch-repeat-count=100",
         "-iree-llvm-target-cpu-features=host",
         "-iree-flow-enable-fuse-padding-into-linalg-consumer-ops",
+        "-iree-llvmcpu-enable-pad-consumer-fusion",
         "-iree-llvmcpu-enable-hoist-padding",
         "-iree-llvm-debug-symbols=false",
         "-iree-vm-bytecode-module-strip-source-map=true",
